@@ -20,9 +20,6 @@ const PostType: GraphQLObjectType = new GraphQLObjectType({
     content: {
       type: new GraphQLNonNull(GraphQLString),
     },
-    author: {
-      type: new GraphQLNonNull(GraphQLString),
-    },
     authorId: {
       type: new GraphQLNonNull(UUIDType),
     },
