@@ -46,6 +46,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           source: query,
           variableValues: variables,
           operationName,
+          contextValue: { prisma }
         });
 
         return result;
