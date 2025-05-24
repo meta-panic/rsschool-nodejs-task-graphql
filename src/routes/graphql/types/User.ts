@@ -10,7 +10,22 @@ export type User = {
   id: string;
   name: string;
   balance: number;
+  userSubscribedTo?: Subscription[];
+  subscribedToUser?: Subscription[];
 }
+
+export type Subscriber = {
+  subscriber: User;
+} & Subscription;
+
+export type Subscription = {
+  authorId: string;
+  subscriberId: string;
+};
+
+export type Author = {
+  author: User;
+} & Subscription;
 
 const UserType: GraphQLObjectType<User, Context> = new GraphQLObjectType({
   name: 'User',

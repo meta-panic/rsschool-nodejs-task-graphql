@@ -22,6 +22,8 @@ import { ProfileType } from './types/Profile.js';
 import { UserType } from './types/User.js';
 import { PostType } from './types/Post.js';
 import { createLoaders } from './loader/createLoaders.js';
+import { Context } from './types.js';
+import { parseResolveInfo } from 'graphql-parse-resolve-info';
 
 
 type GraphQLRequest = {
@@ -331,8 +333,14 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         },
         users: {
           type: new GraphQLList(UserType),
-          resolve: async () => {
-            return await prisma.user.findMany();
+          resolve: async (_, __, { loaders }: Context, info) => {
+
+            const parsedInfo = parseResolveInfo(info)?.fieldsByTypeName["User"];
+
+            return loaders.user.all.load({
+              fetchAuthors: !!parsedInfo?.["userSubscribedTo"],
+              fetchSubs: !!parsedInfo?.["subscribedToUser"]
+            });
           }
         },
         user: {
