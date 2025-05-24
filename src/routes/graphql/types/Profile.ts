@@ -3,6 +3,7 @@ import { UUIDType } from "./uuid.js";
 import { MemberType } from "./MemberType.js";
 import { Context } from "../types.js";
 
+
 export type Profile = {
   id: string;
   isMale: boolean;
@@ -25,13 +26,8 @@ const ProfileType: GraphQLObjectType = new GraphQLObjectType({
     },
     memberType: {
       type: new GraphQLNonNull(MemberType),
-      resolve: async (profile: Profile, _, { prisma }: Context) => {
-        const kek = await prisma.memberType.findUnique({
-          where: {
-            id: profile.memberTypeId,
-          },
-        });
-        return kek
+      resolve: async (profile: Profile, _, { loaders }: Context) => {
+        return loaders.profile.memberTypes.load(profile.memberTypeId);
       }
     },
   }),

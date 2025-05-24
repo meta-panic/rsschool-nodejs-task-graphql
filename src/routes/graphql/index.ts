@@ -1,16 +1,32 @@
 import { FastifyPluginAsyncTypebox } from '@fastify/type-provider-typebox';
+import depthLimit from 'graphql-depth-limit';
+import {
+  graphql,
+  GraphQLBoolean,
+  GraphQLFloat,
+  GraphQLInputObjectType,
+  GraphQLInt,
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLObjectType,
+  GraphQLSchema,
+  GraphQLString,
+  parse,
+  validate
+} from 'graphql';
+
 import { createGqlResponseSchema, gqlResponseSchema } from './schemas.js';
-import { graphql, GraphQLBoolean, GraphQLFloat, GraphQLInputObjectType, GraphQLInt, GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLSchema, GraphQLString, parse, validate } from 'graphql';
 import { UUIDType } from './types/uuid.js';
 import { MemberType, MemberTypeIdEnum } from './types/MemberType.js';
 import { ProfileType } from './types/Profile.js';
 import { UserType } from './types/User.js';
 import { PostType } from './types/Post.js';
-import depthLimit from 'graphql-depth-limit';
+import { createLoaders } from './loader/createLoaders.js';
+
 
 type GraphQLRequest = {
   query: string;
-  variables?: Record<string, any>;
+  variables?: Record<string, unknown>;
   operationName?: string;
 };
 
@@ -28,6 +44,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     handler: async (request, reply) => {
       const { query, variables, operationName } = request.body as GraphQLRequest;
+      const loaders = createLoaders(prisma);
 
       try {
         const ast = parse(query);
@@ -46,7 +63,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           source: query,
           variableValues: variables,
           operationName,
-          contextValue: { prisma }
+          contextValue: { prisma, loaders }
         });
 
         return result;
