@@ -103,47 +103,56 @@ export function createUserBatchers(globalCache: GlobalCache, prisma: PrismaClien
 }
 
 
-function getAuthorsById(users: User[], ids: string[]): Author[] {
+function getRelatedUsers<T>(
+  users: User[],
+  ids: string[],
+  subscriptionKey: 'userSubscribedTo' | 'subscribedToUser',
+  relatedUserIdKey: 'authorId' | 'subscriberId',
+  resultUserKey: 'author' | 'subscriber'
+): T[] {
   const subs = users
     .filter(user => ids.includes(user.id))
-    .flatMap(u => u.userSubscribedTo || [])
-    .filter(u => !!u); // Filter out falsy subscriptions
+    .flatMap(u => u[subscriptionKey] || []);
 
-  const authors: Author[] = subs.map(sub => {
-    const authorUser = users.find(user => user.id === sub.authorId);
-    if (!authorUser) {
+  const results: T[] = subs.map(sub => {
+    const relatedUserId = sub[relatedUserIdKey];
+    const relatedUser = users.find(user => user.id === relatedUserId);
+
+    if (!relatedUser) {
       return null;
     }
 
-    return {
+    // Construct the result object
+    const baseResult = {
       authorId: sub.authorId,
       subscriberId: sub.subscriberId,
-      author: authorUser,
     };
-  }).filter(item => item !== null) as Author[];
+    baseResult[resultUserKey] = relatedUser;
 
-  return authors
+    return baseResult as T;
+  }).filter(item => item !== null) as T[]; // Filter out null results
+
+  return results;
+}
+
+
+function getAuthorsById(users: User[], ids: string[]): Author[] {
+  return getRelatedUsers<Author>(
+    users,
+    ids,
+    'userSubscribedTo',
+    'authorId',
+    'author'
+  );
 }
 
 
 function getSubscribersById(users: User[], ids: string[]): Subscriber[] {
-  const subs = users
-    .filter(user => ids.includes(user.id))
-    .flatMap(u => u.subscribedToUser || [])
-    .filter(u => !!u); // Filter out falsy subscriptions
-
-  const sunscribers: Subscriber[] = subs.map(sub => {
-    const sunscriberUser = users.find(user => user.id === sub.subscriberId);
-    if (!sunscriberUser) {
-      return null;
-    }
-
-    return {
-      authorId: sub.authorId,
-      subscriberId: sub.subscriberId,
-      subscriber: sunscriberUser,
-    };
-  }).filter(item => item !== null) as Subscriber[];
-
-  return sunscribers
+  return getRelatedUsers<Subscriber>(
+    users,
+    ids,
+    'subscribedToUser',
+    'subscriberId',
+    'subscriber'
+  );
 }
