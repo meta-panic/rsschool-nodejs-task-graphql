@@ -214,7 +214,7 @@ export const mutation = new GraphQLObjectType({
           }
         })
 
-        return 'Subscribed successfully';
+        return 'Unsubscribed successfully';
       }
     }
   }
